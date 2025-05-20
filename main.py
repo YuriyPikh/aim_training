@@ -30,7 +30,7 @@ class Circle:
 class Game:
     CIRCLE_TTL = 1000
     SPAWN_INTERVAL = 350
-    GAME_DURATION = 60000
+    GAME_DURATION = 6000
     def __init__(self, root):
         self.root = root
         self.window_width = root.winfo_width()
@@ -263,19 +263,34 @@ class Game:
         GameMenu(self.root)
 
     def build_pouse_menu(self):
-        
         self.stop_game_loop()
-        #unbind escape key 
-        self.canvas_for_manue = tk.Canvas(root, width=220, height=220, bg='black', highlightthickness=0)
+        # Remove old menu if exists
+        if hasattr(self, 'canvas_for_manue'):
+            self.canvas_for_manue.destroy()
+        # Create a rounded rectangle background
+        self.canvas_for_manue = tk.Canvas(self.root, width=320, height=260, bg='gray', highlightthickness=0)
         self.canvas_for_manue.place(relx=0.5, rely=0.5, anchor='center')
-        pouse_label = tk.Label(self.canvas_for_manue, text="Paused", bg="gray", font=("Segoe UI", 12))
-        pouse_label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        # Draw rounded rectangle (simulate with polygons/arcs)
+        self.canvas_for_manue.create_rectangle(10, 10, 310, 250, fill="#222831", outline="#393e46", width=3)
+        self.canvas_for_manue.create_oval(0, 0, 40, 40, fill="#222831", outline="#393e46", width=3)
+        self.canvas_for_manue.create_oval(280, 0, 320, 40, fill="#222831", outline="#393e46", width=3)
+        self.canvas_for_manue.create_oval(0, 220, 40, 260, fill="#222831", outline="#393e46", width=3)
+        self.canvas_for_manue.create_oval(280, 220, 320, 260, fill="#222831", outline="#393e46", width=3)
 
-        pouse_resume_btn = tk.Button(self.canvas_for_manue, text="Resume", bg="gray", command=self.resume_game)
-        pouse_resume_btn.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
+        # Title
+        pouse_label = tk.Label(self.canvas_for_manue, text="⏸ Paused", bg="#222831", fg="#00adb5",
+                               font=("Segoe UI", 20, "bold"))
+        pouse_label.place(relx=0.5, y=40, anchor='center')
 
-        pouse_exit_btn = tk.Button(self.canvas_for_manue, text="Exit to Menu", bg="gray", command=self.exit_to_menu)
-        pouse_exit_btn.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+        # Buttons
+        btn_style = {"bg": "#393e46", "fg": "#eeeeee", "activebackground": "#00adb5", "activeforeground": "#222831",
+                     "font": ("Segoe UI", 13, "bold"), "relief": "flat", "bd": 0, "width": 16, "height": 1}
+
+        pouse_resume_btn = tk.Button(self.canvas_for_manue, text="▶ Resume", command=self.resume_game, **btn_style)
+        pouse_resume_btn.place(relx=0.5, y=100, anchor='center')
+
+        pouse_exit_btn = tk.Button(self.canvas_for_manue, text="⏏ Exit to Menu", command=self.exit_to_menu, **btn_style)
+        pouse_exit_btn.place(relx=0.5, y=160, anchor='center')
 
     def resume_game(self):
         self.canvas_for_manue.destroy()
@@ -293,22 +308,35 @@ class Game:
 class GameMenu:
     def __init__(self, root):
         self.root = root
-        self.canvas = tk.Canvas(root, width=220, height=220, bg='black', highlightthickness=0)
+        self.canvas = tk.Canvas(root, width=320, height=260, bg='gray', highlightthickness=0)
         self.canvas.place(relx=0.5, rely=0.5, anchor='center')
         self.build_menu()
 
     def build_menu(self):
-        label = tk.Label(self.canvas, text="Game Menu", bg="gray", font=("Segoe UI", 12))
-        label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        # Draw rounded rectangle background
+        self.canvas.create_rectangle(10, 10, 310, 250, fill="#222831", outline="#393e46", width=3)
+        self.canvas.create_oval(0, 0, 40, 40, fill="#222831", outline="#393e46", width=3)
+        self.canvas.create_oval(280, 0, 320, 40, fill="#222831", outline="#393e46", width=3)
+        self.canvas.create_oval(0, 220, 40, 260, fill="#222831", outline="#393e46", width=3)
+        self.canvas.create_oval(280, 220, 320, 260, fill="#222831", outline="#393e46", width=3)
 
-        start_btn = tk.Button(self.canvas, text="Start Game", bg="gray", command=self.start_game)
-        start_btn.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
+        # Title
+        label = tk.Label(self.canvas, text="🎯 Reaction Trainer", bg="#222831", fg="#00adb5",
+                         font=("Segoe UI", 20, "bold"))
+        label.place(relx=0.5, y=40, anchor='center')
 
-        start_btn = tk.Button(self.canvas, text="Game Settings", bg="gray", command=self.open_settings)
-        start_btn.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+        # Buttons
+        btn_style = {"bg": "#393e46", "fg": "#eeeeee", "activebackground": "#00adb5", "activeforeground": "#222831",
+                     "font": ("Segoe UI", 13, "bold"), "relief": "flat", "bd": 0, "width": 16, "height": 1}
 
-        exit_btn = tk.Button(self.canvas, text="Exit", bg="gray", command=root.quit)
-        exit_btn.grid(row=3, column=0, padx=10, pady=5, sticky="ew")
+        start_btn = tk.Button(self.canvas, text="▶ Start Game", command=self.start_game, **btn_style)
+        start_btn.place(relx=0.5, y=100, anchor='center')
+
+        settings_btn = tk.Button(self.canvas, text="⚙ Game Settings", command=self.open_settings, **btn_style)
+        settings_btn.place(relx=0.5, y=150, anchor='center')
+
+        exit_btn = tk.Button(self.canvas, text="Exit", command=self.root.quit, **btn_style)
+        exit_btn.place(relx=0.5, y=200, anchor='center')
 
     def start_game(self):
         self.canvas.destroy()
