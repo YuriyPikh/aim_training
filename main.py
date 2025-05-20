@@ -1,19 +1,22 @@
 import tkinter as tk
 import random
 import time
+import colorsys
+
 
 class Circle:
+    circle_color = "#ff0000"
     def __init__(self, canvas, x, y, r):
         self.canvas = canvas
         self.x = x
         self.y = y
         self.r = r
+        
         self.id = self.canvas.create_oval(
             self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r,
-            fill="red", outline="black"
+            fill=f"{Circle.circle_color}", outline="black"
         )
         self.spawn_time = int(time.time() * 1000)
-
 
     def is_expired(self, current_time, ttl=1000):
         return current_time - self.spawn_time >= ttl
@@ -28,13 +31,15 @@ class Game:
     CIRCLE_TTL = 1000
     SPAWN_INTERVAL = 350
     GAME_DURATION = 60000
-
     def __init__(self, root):
-        global width, height
         self.root = root
-        self.canvas = tk.Canvas(root, width=width, height=height, bg='grey', highlightthickness=0)
+        self.window_width = root.winfo_width()
+        self.window_height = root.winfo_height()
+        self.canvas = tk.Canvas(root, width=self.window_width, height=self.window_height, bg='grey', highlightthickness=0)
         self.canvas.pack()
         self.canvas.bind("<ButtonRelease-1>", self.on_click)
+        
+        
 
         #часові змінні
         self.now = 0
@@ -62,10 +67,10 @@ class Game:
         self.type_of_spawn = 0
 
         self.points_label = tk.Label(self.canvas, text="Points: 0", bg="grey", font=("Segoe UI", 12))
-        self.points_label.place(relx=0.01, rely=0.01)
+        self.points_label.place(x=10, y=10)
 
         self.timer_lable = tk.Label(self.canvas, text="Time: 60", bg="grey", font=("Segoe UI", 12))
-        self.timer_lable.place(relx=0.88, rely=0.01)
+        self.timer_lable.place(relx=1.0, x=-10, y=10, anchor='ne')
 
         #press esc to pause
         self.root.bind("<Escape>", lambda event: self.canvas.after(0, self.build_pouse_menu()))
@@ -119,10 +124,10 @@ class Game:
             self.end_game()
 
     def draw_circle_line(self):
-        self.line_x1 = random.randint(50, 550)
-        self.line_y1 = random.randint(50, 350)
-        self.line_x2 = random.randint(50, 550)
-        self.line_y2 = random.randint(50, 350)
+        self.line_x1 = random.randint(50, self.window_width - 50)
+        self.line_y1 = random.randint(50, self.window_height - 50)
+        self.line_x2 = random.randint(50, self.window_width - 50)
+        self.line_y2 = random.randint(50, self.window_height - 50)
         self.line_id = self.canvas.create_line(self.line_x1, self.line_y1, self.line_x2, self.line_y2, fill="white", width=2)
         self.lines.append(self.line_id)
         # Calculate the distance between the two points
@@ -143,8 +148,8 @@ class Game:
         self.random_iteration_spawn_number
 
         self.number_of_spawned_circles += 1 
-        x = random.randint(50, 550)
-        y = random.randint(50, 350)
+        x = random.randint(50, self.window_width - 50)
+        y = random.randint(50, self.window_height - 50)
         r = random.randint(10, 30)
         circle = Circle(self.canvas, x, y, r)
         self.circles.append(circle)
@@ -264,13 +269,13 @@ class Game:
         self.canvas_for_manue = tk.Canvas(root, width=220, height=220, bg='black', highlightthickness=0)
         self.canvas_for_manue.place(relx=0.5, rely=0.5, anchor='center')
         pouse_label = tk.Label(self.canvas_for_manue, text="Paused", bg="gray", font=("Segoe UI", 12))
-        pouse_label.grid(row=0, column=0, padx=10, pady=10)
+        pouse_label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
         pouse_resume_btn = tk.Button(self.canvas_for_manue, text="Resume", bg="gray", command=self.resume_game)
-        pouse_resume_btn.grid(row=1, column=0, padx=10, pady=5)
+        pouse_resume_btn.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
 
         pouse_exit_btn = tk.Button(self.canvas_for_manue, text="Exit to Menu", bg="gray", command=self.exit_to_menu)
-        pouse_exit_btn.grid(row=2, column=0, padx=10, pady=5)
+        pouse_exit_btn.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
 
     def resume_game(self):
         self.canvas_for_manue.destroy()
@@ -278,6 +283,7 @@ class Game:
         self.loop()
 
     def exit_to_menu(self):
+        self.canvas_for_manue.destroy()
         self.canvas.destroy()
         GameMenu(self.root)
         
@@ -293,25 +299,114 @@ class GameMenu:
 
     def build_menu(self):
         label = tk.Label(self.canvas, text="Game Menu", bg="gray", font=("Segoe UI", 12))
-        label.grid(row=0, column=0, padx=10, pady=10)
+        label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
         start_btn = tk.Button(self.canvas, text="Start Game", bg="gray", command=self.start_game)
-        start_btn.grid(row=1, column=0, padx=10, pady=5)
+        start_btn.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
+
+        start_btn = tk.Button(self.canvas, text="Game Settings", bg="gray", command=self.open_settings)
+        start_btn.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
 
         exit_btn = tk.Button(self.canvas, text="Exit", bg="gray", command=root.quit)
-        exit_btn.grid(row=2, column=0, padx=10, pady=5)
+        exit_btn.grid(row=3, column=0, padx=10, pady=5, sticky="ew")
 
     def start_game(self):
         self.canvas.destroy()
         Game(self.root)
 
+    def open_settings(self):
+        self.canvas.destroy()
+        settings_canvas = tk.Canvas(self.root, width=220, height=220, bg='black', highlightthickness=0)
+        settings_canvas.place(relx=0.5, rely=0.5, anchor='center')
+        label = tk.Label(settings_canvas, text="Settings", bg="gray", font=("Segoe UI", 12))
+        label.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
+
+        difficulty_label = tk.Label(settings_canvas, text="Difficulty Level:", bg="gray", font=("Segoe UI", 10))
+        difficulty_label.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+
+        difficulty_var = tk.StringVar(value="Normal")
+        difficulty_spinbox = tk.Spinbox(
+            settings_canvas,
+            values=("Easy", "Normal", "Hard"),
+            textvariable=difficulty_var,
+            state="readonly",
+            width=5,
+            font=("Segoe UI", 10)
+        )
+        difficulty_spinbox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+
+        color_label = tk.Label(settings_canvas, text="Target Color:", bg="gray", font=("Segoe UI", 10))
+        color_label.grid(row=2, column=0, padx=5, pady=5, sticky="ew", columnspan=2)
+
+        # Default color is red (hue=0)
+        hue_var = tk.DoubleVar(value=0.0)
+
+        def hue_to_hex(h):
+            # Convert hue [0,1] to RGB, then to hex
+            r, g, b = colorsys.hsv_to_rgb(h, 1, 1)
+            return '#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255))
+
+        color_preview = tk.Label(settings_canvas, bg=hue_to_hex(hue_var.get()), width=10, height=2)
+        color_preview.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+
+        def update_preview(val):
+            color_preview.config(bg=hue_to_hex(float(val)))
+
+        hue_slider = tk.Scale(settings_canvas, from_=0, to=1, resolution=0.01, orient="horizontal", bg="gray",
+                      variable=hue_var, command=update_preview, length=150)
+        hue_slider.grid(row=3, column=1, padx=5, pady=5)
+
+        def apply_changes():
+            Circle.circle_color = hue_to_hex(hue_var.get())
+            color_preview.config(bg=Circle.circle_color)
+            
+            if difficulty_var.get() == "Easy":
+                    Game.SPAWN_INTERVAL = 500
+                    Game.CIRCLE_TTL = 1500
+            elif difficulty_var.get() == "Normal":
+                    Game.SPAWN_INTERVAL = 350
+                    Game.CIRCLE_TTL = 1000
+            elif difficulty_var.get() == "Hard":
+                    Game.SPAWN_INTERVAL = 200
+                    Game.CIRCLE_TTL = 700
+            
+            if screen_mode_var.get() == "Windowed":
+                self.root.geometry = f"{width}x{height}"
+                self.root.attributes('-fullscreen', False)
+            elif screen_mode_var.get() == "Fullscreen":
+                width, height = self.root.winfo_screenwidth() , self.root.winfo_screenheight()
+                self.root.attributes('-fullscreen', True)
+
+        color_label = tk.Label(settings_canvas, text="Sreen mode:", bg="gray", font=("Segoe UI", 10))
+        color_label.grid(row=4, column=0, padx=5, pady=5, sticky="ew")
+
+        screen_mode_var = tk.StringVar(value="Windowed")
+        screen_mode_spinbox = tk.Spinbox(
+            settings_canvas,
+            values=("Windowed", "Fullscreen"),
+            textvariable=screen_mode_var,
+            state="readonly",
+            width=10,
+            font=("Segoe UI", 10)
+        )
+        screen_mode_spinbox.grid(row=4, column=1, padx=5, pady=5, sticky="ew")
+
+
+        apply_btn = tk.Button(settings_canvas, text="Apply Changes", bg="gray", command=apply_changes)
+        apply_btn.grid(row=5, column=0, padx=5, pady=5, sticky="ew")
+
+
+        back_btn = tk.Button(settings_canvas, text="Back", bg="gray", command=lambda: back_to_menu(self, settings_canvas))
+        back_btn.grid(row=5, column=1, padx=5, pady=5, sticky="ew")
+
+        def back_to_menu(self, settings_canvas):
+            settings_canvas.destroy()
+            GameMenu(self.root)
     
-
-    
-
-
 
 root = tk.Tk()
+global width, height
 width = 600
 height = 400
 root.geometry(f"{width}x{height}")
