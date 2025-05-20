@@ -2,6 +2,7 @@ import tkinter as tk
 import random
 import time
 import colorsys
+import json
 
 
 class Circle:
@@ -28,10 +29,16 @@ class Circle:
         self.canvas.delete(self.id)
 
 class Game:
-    CIRCLE_TTL = 1000
-    SPAWN_INTERVAL = 350
-    GAME_DURATION = 6000
+
     def __init__(self, root):
+
+        with open("settings.json", "r") as f:
+            settings = json.load(f)
+
+        self.CIRCLE_TTL = settings["circle_ttl"]
+        self.SPAWN_INTERVAL = settings["spawn_interval"]
+        self.GAME_DURATION = 60000
+
         self.root = root
         self.window_width = root.winfo_width()
         self.window_height = root.winfo_height()
@@ -128,7 +135,7 @@ class Game:
         self.line_y1 = random.randint(50, self.window_height - 50)
         self.line_x2 = random.randint(50, self.window_width - 50)
         self.line_y2 = random.randint(50, self.window_height - 50)
-        self.line_id = self.canvas.create_line(self.line_x1, self.line_y1, self.line_x2, self.line_y2, fill="white", width=2)
+        self.line_id = self.canvas.create_line(self.line_x1, self.line_y1, self.line_x2, self.line_y2, fill="gray", width=2)
         self.lines.append(self.line_id)
         # Calculate the distance between the two points
         line_length = ((self.line_x2 - self.line_x1) ** 2 + (self.line_y2 - self.line_y1) ** 2) ** 0.5
@@ -164,79 +171,7 @@ class Game:
         self.circles.append(circle)
         self.number_of_spawned_circles += 1
         self.whole_number_of_circles += 1
-    
-        '''    def spawn_drag_box_and_circle(self):
-            # Remove any previous drag box or circles
-            self.destroy_lines()
-            for circle in self.circles[:]:
-                circle.remove()
-                self.circles.remove(circle)
-
-            # Define box dimensions
-            box_width = random.randint(120, 200)
-            box_height = random.randint(40, 80)
-            margin = 40
-            x1 = random.randint(margin, width - box_width - margin)
-            y1 = random.randint(margin, height - box_height - margin)
-            x2 = x1 + box_width
-            y2 = y1 + box_height
-
-            # Draw the box (rectangle)
-            self.drag_box_id = self.canvas.create_rectangle(x1, y1, x2, y2, outline="yellow", width=3)
-            self.lines.append(self.drag_box_id)
-
-            # Spawn a circle at the left edge of the box
-            r = 20
-            circle_x = x1 + r
-            circle_y = (y1 + y2) // 2
-            self.drag_circle_obj = Circle(self.canvas, circle_x, circle_y, r)
-            self.circles.append(self.drag_circle_obj)
-
-            # Store drag box info for use in drag event
-            self.drag_box = (x1, y1, x2, y2)
-            self.dragging = False
-
-            # Bind mouse events for dragging
-            self.canvas.bind("<ButtonPress-1>", self.start_drag)
-            self.canvas.bind("<B1-Motion>", self.do_drag)
-            self.canvas.bind("<ButtonRelease-1>", self.stop_drag)
-
-        def start_drag(self, event):
-            # Only start drag if click is inside the circle
-            if hasattr(self, 'drag_circle_obj') and self.drag_circle_obj.is_clicked(event.x, event.y):
-                self.dragging = True
-
-        def do_drag(self, event):
-            if getattr(self, 'dragging', False) and hasattr(self, 'drag_circle_obj'):
-                x1, y1, x2, y2 = self.drag_box
-                r = self.drag_circle_obj.r
-                # Clamp x within box
-                new_x = min(max(event.x, x1 + r), x2 - r)
-                # Keep y centered in the box
-                new_y = (y1 + y2) // 2
-                self.canvas.coords(
-                    self.drag_circle_obj.id,
-                    new_x - r, new_y - r,
-                    new_x + r, new_y + r
-                )
-                self.drag_circle_obj.x = new_x
-                self.drag_circle_obj.y = new_y
-
-        def stop_drag(self, event):
-            if getattr(self, 'dragging', False) and hasattr(self, 'drag_circle_obj'):
-                x1, y1, x2, y2 = self.drag_box
-                r = self.drag_circle_obj.r
-                # If circle is at the right edge of the box, count as hit
-                if self.drag_circle_obj.x >= x2 - r - 2:
-                    self.drag_circle_obj.remove()
-                    self.circles.remove(self.drag_circle_obj)
-                    self.add_points()
-                    # Remove box
-                    self.canvas.delete(self.drag_box_id)
-                    self.lines.clear()   
-                self.dragging = False'''
-
-
+        
     def on_click(self, event):
         for circle in self.circles:
             if circle.is_clicked(event.x, event.y):
@@ -311,6 +246,7 @@ class GameMenu:
         self.canvas = tk.Canvas(root, width=320, height=260, bg='gray', highlightthickness=0)
         self.canvas.place(relx=0.5, rely=0.5, anchor='center')
         self.build_menu()
+        
 
     def build_menu(self):
         # Draw rounded rectangle background
@@ -339,7 +275,10 @@ class GameMenu:
         exit_btn.place(relx=0.5, y=200, anchor='center')
 
     def start_game(self):
+        with open("settings.json", "r") as f:
+            settings = json.load(f)
         self.canvas.destroy()
+        Circle.circle_color = settings["circle_color"]
         Game(self.root)
 
     def open_settings(self):
@@ -388,23 +327,30 @@ class GameMenu:
         def apply_changes():
             Circle.circle_color = hue_to_hex(hue_var.get())
             color_preview.config(bg=Circle.circle_color)
+            with open("settings.json", "r") as f:
+                settings = json.load(f)
             
-            if difficulty_var.get() == "Easy":
-                    Game.SPAWN_INTERVAL = 500
-                    Game.CIRCLE_TTL = 1500
-            elif difficulty_var.get() == "Normal":
-                    Game.SPAWN_INTERVAL = 350
-                    Game.CIRCLE_TTL = 1000
-            elif difficulty_var.get() == "Hard":
-                    Game.SPAWN_INTERVAL = 200
-                    Game.CIRCLE_TTL = 700
-            
+            # Save width and height to settings.json if screen mode is changed
             if screen_mode_var.get() == "Windowed":
-                self.root.geometry = f"{width}x{height}"
                 self.root.attributes('-fullscreen', False)
+                width, height = 600, 400
+                self.root.geometry(f"{width}x{height}")
+                attribute_bull = False
             elif screen_mode_var.get() == "Fullscreen":
-                width, height = self.root.winfo_screenwidth() , self.root.winfo_screenheight()
+                width, height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
                 self.root.attributes('-fullscreen', True)
+                self.root.geometry(f"{width}x{height}")
+                attribute_bull = True
+
+            # Update settings.json with new values
+            settings["circle_ttl"] = 700 if difficulty_var.get() == "Hard" else 1000 if difficulty_var.get() == "Normal" else 1500
+            settings["spawn_interval"] = 300 if difficulty_var.get() == "Hard" else 500 if difficulty_var.get() == "Normal" else 700
+            settings["circle_color"] = Circle.circle_color
+            settings["window_width"] = width
+            settings["window_height"] = height
+            settings["root_attributes"] = str(attribute_bull)
+            with open("settings.json", "w") as f:
+                json.dump(settings, f, indent=4)
 
         color_label = tk.Label(settings_canvas, text="Sreen mode:", bg="gray", font=("Segoe UI", 10))
         color_label.grid(row=4, column=0, padx=5, pady=5, sticky="ew")
@@ -434,10 +380,27 @@ class GameMenu:
     
 
 root = tk.Tk()
+try:
+    with open("settings.json", "r") as f:
+        json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    with open("settings.json", "w") as f:
+        json.dump({
+            "circle_ttl": 1000,
+            "spawn_interval": 500,
+            "circle_color": "#ff0000",
+            "window_width": 600,
+            "window_height": 400,
+            "root_attributes": "False"
+        }, f, indent=4)
 global width, height
-width = 600
-height = 400
+
+with open("settings.json", "r") as f:
+    settings = json.load(f)
+width = settings["window_width"]
+height =settings["window_height"]
 root.geometry(f"{width}x{height}")
+root.attributes('-fullscreen', settings["root_attributes"])
 root.title("Reaction trainer")
 root.resizable(False, False)
 root.configure(bg="gray")
